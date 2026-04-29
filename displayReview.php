@@ -1,22 +1,21 @@
 <?php
 include_once("connect.php");
 
-$bookTitle = $_GET['title'];
-$query = "SELECT * FROM review WHERE bookTitle='$bookTitle'";
-$result = mysqli_query($connection, $query);
+$bookTitle = $_GET['title'] ?? '';
 
-$reviews = array();
-while ($row = mysqli_fetch_assoc($result)) {
-    $reviews[] = $row;
-}
+$stmt = $connection->prepare("SELECT * FROM review WHERE bookTitle = ?");
+$stmt->bind_param("s", $bookTitle);
+$stmt->execute();
 
-foreach ($reviews as $review) {
+$result = $stmt->get_result();
 
- 
+while ($row = $result->fetch_assoc()) {
 
     echo "<div class='review' style='border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;'>";
-    echo "<p><strong>User:</strong> " . ($review['userName'] ? $review['userName'] : 'Anonymous') . "</p>";
-    echo "<p><strong>Review:</strong> " . $review['reviewText'] . "</p>";
+    echo "<p><strong>User:</strong> " . htmlspecialchars($row['userName'] ?: 'Anonymous') . "</p>";
+    echo "<p><strong>Review:</strong> " . htmlspecialchars($row['reviewText']) . "</p>";
     echo "</div>";
 }
+
+$stmt->close();
 ?>
